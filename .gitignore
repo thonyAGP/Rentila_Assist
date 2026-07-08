@@ -1,0 +1,20 @@
+# Donnees personnelles des locataires — ne jamais committer
+/dossiers/*
+!/dossiers/.gitkeep
+
+# Emails transferes (contiennent des pieces d'identite)
+/inbox/*
+!/inbox/.gitkeep
+
+# Config reelle des biens (garder l'exemple versionne)
+/config/logement.yaml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editeurs
+.DS_Store
+*.swp

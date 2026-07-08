@@ -1,0 +1,32 @@
+# Renseignez ici les biens que vous louez. Copiez ce fichier en `config/logement.yaml`.
+# Le champ `ref` sert a associer un email transfere a un bien
+# (mentionnez la ref dans l'objet de l'email, ou choisissez au moment de la validation).
+
+biens:
+  - ref: "T2-RIVOLI"
+    adresse: "12 rue de Rivoli, 75004 Paris"
+    type: "Appartement T2"
+    surface: 42
+    meuble: true
+    loyer_hc: 950        # loyer hors charges (EUR)
+    charges: 80          # provision pour charges (EUR)
+    loyer_cc: 1030       # loyer charges comprises (EUR) = loyer_hc + charges
+    depot_garantie: 950  # 1 mois (nu) ou 2 mois (meuble) de loyer HC
+    date_disponibilite: "2026-08-01"
+
+  - ref: "STUDIO-GARE"
+    adresse: "5 avenue de la Gare, 69003 Lyon"
+    type: "Studio"
+    surface: 24
+    meuble: true
+    loyer_hc: 620
+    charges: 50
+    loyer_cc: 670
+    depot_garantie: 1240
+    date_disponibilite: "2026-07-15"
+
+# Vos coordonnees de bailleur (reprises dans les documents)
+bailleur:
+  nom: "VOTRE NOM"
+  email: "thony56.gtr@gmail.com"
+  telephone: ""
