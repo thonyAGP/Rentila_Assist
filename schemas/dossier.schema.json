@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dossier de location",
+  "description": "Dossier d'une location : locataires, pieces recues, code Visale, etat des lieux. Ne jamais inventer une valeur : champ absent/illisible => null + ajouter a meta.champs_incertains.",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "object",
+      "description": "Le bien loue (repris de config/logement.yaml).",
+      "properties": {
+        "ref": { "type": ["string", "null"] },
+        "adresse": { "type": ["string", "null"] }
+      }
+    },
+    "locataires": {
+      "type": "array",
+      "description": "Un ou plusieurs locataires (colocation / couple).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "civilite": { "type": ["string", "null"], "enum": ["M.", "Mme", null] },
+          "nom": { "type": ["string", "null"] },
+          "prenoms": { "type": ["string", "null"] },
+          "date_naissance": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
+          "nationalite": { "type": ["string", "null"] },
+          "email": { "type": ["string", "null"] },
+          "telephone": { "type": ["string", "null"] },
+          "photo_profil": { "type": ["string", "null"], "description": "Chemin relatif vers la photo issue de la piece d'identite" }
+        }
+      }
+    },
+    "pieces": {
+      "type": "array",
+      "description": "Inventaire des documents recus et rangees dans pieces/.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["piece_identite", "visale", "certificat_scolarite", "attestation_assurance", "etat_des_lieux", "rib", "justificatif_revenus", "autre"]
+          },
+          "fichier": { "type": "string", "description": "Nom de fichier dans pieces/ (apres renommage standard)" },
+          "fichier_origine": { "type": ["string", "null"] },
+          "locataire": { "type": ["string", "null"], "description": "Nom du locataire concerne, si applicable" },
+          "champs": { "type": "object", "description": "Champs extraits propres au type de piece" },
+          "recu_le": { "type": ["string", "null"] }
+        },
+        "required": ["type", "fichier"]
+      }
+    },
+    "visale": {
+      "type": "object",
+      "description": "Extrait du PDF de garantie Visale fourni par le locataire.",
+      "properties": {
+        "code_visa": { "type": ["string", "null"], "description": "Numero du visa certifie Visale a saisir sur visale.fr" },
+        "beneficiaire": { "type": ["string", "null"] },
+        "validite_debut": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
+        "validite_fin": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
+        "statut_activation": { "type": ["string", "null"], "enum": ["a_activer", "active", null] }
+      }
+    },
+    "assurance_habitation": {
+      "type": ["object", "null"],
+      "properties": {
+        "assureur": { "type": ["string", "null"] },
+        "numero_contrat": { "type": ["string", "null"] },
+        "validite_debut": { "type": ["string", "null"] },
+        "validite_fin": { "type": ["string", "null"] },
+        "bien_couvert": { "type": ["string", "null"] }
+      }
+    },
+    "etat_des_lieux": {
+      "type": ["object", "null"],
+      "properties": {
+        "type": { "type": ["string", "null"], "enum": ["entree", "sortie", null] },
+        "bien": { "type": ["string", "null"], "description": "Bien tel qu'ecrit dans le PDF" },
+        "locataires": { "type": "array", "items": { "type": "string" } },
+        "date": { "type": ["string", "null"] },
+        "fichier": { "type": ["string", "null"] }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "source_email": { "type": ["string", "null"] },
+        "confiance_globale": { "type": ["string", "null"], "enum": ["Haute", "Moyenne", "Faible", null] },
+        "champs_incertains": { "type": "array", "items": { "type": "string" } },
+        "statut": { "type": ["string", "null"], "enum": ["a_traiter", "a_valider", "valide", null] }
+      }
+    }
+  }
+}

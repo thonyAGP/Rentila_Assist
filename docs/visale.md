@@ -1,37 +1,29 @@
-# Garantie Visale — mémo
+# Garantie Visale — activation par le bailleur
 
-Visale est une **caution locative gratuite** proposée par Action Logement. Elle couvre les
-impayés de loyers et charges pour le bailleur.
+Visale est une **caution locative gratuite** d'Action Logement. Dans ce workflow, le
+locataire a **déjà obtenu son visa** (il vous envoie le PDF avec son **code visa**) : votre
+rôle est d'**activer la couverture** en enregistrant le contrat de location sur visale.fr.
 
-> ⚠️ Les règles évoluent. **Confirmez toujours sur [visale.fr](https://www.visale.fr)** au
-> moment de la demande. Ce mémo sert à préparer le dossier, pas à décider de l'éligibilité.
+> ⚠️ Règles susceptibles d'évoluer — confirmez sur [visale.fr](https://www.visale.fr).
 
-## Qui fait quoi
-1. **Le candidat locataire** crée son dossier sur visale.fr, dépose ses justificatifs et
-   obtient un **visa certifié** (un numéro de certificat).
-2. **Le bailleur** saisit ce numéro dans son espace Action Logement et génère le
-   **contrat de cautionnement**, à faire **avant la signature du bail**.
+## Ce que le projet extrait du PDF Visale
+- Le **numéro / code de visa** (à saisir sur le site).
+- Le **bénéficiaire** (locataire couvert).
+- Les **dates de validité** du visa.
 
-## Éligibilité (principes usuels, à vérifier)
-- **18–30 ans** : éligible quelle que soit la situation (étudiant, salarié, sans emploi…).
-- **Plus de 30 ans** : sous conditions (embauche de moins de 6 mois, mutation, contrat
-  précaire, ménage en intermédiation locative…).
-- **Plafonds de loyer** (charges comprises), ordres de grandeur usuels :
-  - Île-de-France : ≤ ~1500 €
-  - Autres régions : ≤ ~1300 €
-- **Taux d'effort** : le loyer CC ne doit pas dépasser ~50 % des ressources du candidat.
+Ces champs vont dans `donnees.json` → `visale`, puis dans `visale_activation.md`.
 
-## Pièces généralement demandées au candidat
-- Pièce d'identité en cours de validité.
-- Justificatif de situation : contrat de travail / bulletins de salaire, ou carte étudiant /
-  certificat de scolarité, ou contrat d'alternance…
-- Justificatif de ressources (avis d'imposition récent ou attestation).
-- RIB (selon les cas).
+## Activation sur visale.fr (espace bailleur)
+1. *Enregistrer un contrat de location*.
+2. Saisir le **numéro de visa**.
+3. Renseigner les **caractéristiques du logement** (adresse, type, surface, meublé, loyer HC,
+   charges, loyer CC, dépôt de garantie, date d'effet du bail) — toutes reprises dans
+   `visale_activation.md`.
+4. Vérifier la cohérence loyer / plafond du visa.
+5. **Valider** → la couverture est activée.
+6. Ranger l'accusé / contrat de cautionnement dans les pièces de la location.
 
-## Ce que ce projet prépare pour vous
-Le fichier `dossier_visale.md` généré par dossier contient :
-- La pré-évaluation d'éligibilité (âge, plafond, taux d'effort) à cocher.
-- Les informations candidat pré-remplies depuis la pièce d'identité et l'email.
-- La checklist des justificatifs à réunir.
-- Les informations du logement pour le contrat de cautionnement.
-- Un emplacement pour le **numéro de visa** une fois obtenu.
+## Points de vigilance
+- Le **loyer charges comprises** doit rester dans le plafond du visa.
+- Le **visa doit être valide** à la date d'effet du bail.
+- Le **nom du bénéficiaire** doit correspondre au locataire signataire.

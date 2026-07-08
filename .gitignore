@@ -6,8 +6,9 @@
 /inbox/*
 !/inbox/.gitkeep
 
-# Config reelle des biens (garder l'exemple versionne)
+# Config reelle (garder les exemples versionnes)
 /config/logement.yaml
+/config/pieces_requises.yaml
 
 # Python
 __pycache__/

@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""Remplit les templates (fiche locataire, dossier Visale) a partir des donnees.
+"""Remplit les documents d'un dossier a partir de donnees.json + config logement.
 
 Lit :
-  - dossiers/<slug>/donnees.json   (rempli par Claude apres lecture de la piece d'identite)
-  - config/logement.yaml           (optionnel : infos du bien loue)
+  - dossiers/<slug>/donnees.json   (rempli par Claude apres lecture des pieces)
+  - config/logement.yaml           (infos des biens loues)
 Ecrit :
   - dossiers/<slug>/fiche_locataire.md
-  - dossiers/<slug>/dossier_visale.md
+  - dossiers/<slug>/visale_activation.md
 
-Remplace les placeholders {{chemin.vers.champ}} par les valeurs.
-Les valeurs manquantes deviennent "⚠️ à compléter" pour rester visibles a la validation.
+Placeholders : {{a.b.c}} (valeur simple) et {{bloc.xxx}} (bloc genere).
+Valeur manquante => "⚠️ à compléter" (jamais inventee).
 
-Pas de dependance obligatoire ; PyYAML est utilise si present, sinon un mini-parseur
-gere le format simple du fichier logement.example.yaml.
+Pas de dependance obligatoire ; PyYAML utilise s'il est present, sinon mini-parseur.
 
 Usage:
-    python3 scripts/remplir_templates.py dupont-marie
     python3 scripts/remplir_templates.py dupont-marie --bien T2-RIVOLI
 """
 import argparse
@@ -39,7 +37,7 @@ def charger_yaml(chemin: Path) -> dict:
 
 
 def _mini_yaml(texte: str) -> dict:
-    """Parseur minimal pour la structure de logement.example.yaml (listes/dicos simples)."""
+    """Parseur minimal pour logement.example.yaml (dicos + listes d'objets simples)."""
     racine: dict = {}
     pile = [(-1, racine)]
     dernier_item: dict | None = None
@@ -49,7 +47,7 @@ def _mini_yaml(texte: str) -> dict:
         ligne = ligne_brute.split(" #")[0].rstrip()
         indent = len(ligne) - len(ligne.lstrip())
         contenu = ligne.strip()
-        while pile and indent <= pile[-1][0] and len(pile) > 1:
+        while len(pile) > 1 and indent <= pile[-1][0]:
             pile.pop()
         parent = pile[-1][1]
         if contenu.startswith("- "):
@@ -64,7 +62,6 @@ def _mini_yaml(texte: str) -> dict:
             pile.append((indent, item))
         elif contenu.endswith(":"):
             cle = contenu[:-1].strip()
-            # regarde si la suite est une liste
             enfant: list = []
             parent[cle] = enfant
             pile.append((indent, enfant))
@@ -91,7 +88,6 @@ def _val(v: str):
 
 
 def resoudre(chemin: str, donnees: dict):
-    """Resout 'a.b.c' dans un dict imbrique ; renvoie None si absent."""
     courant = donnees
     for cle in chemin.split("."):
         if isinstance(courant, dict) and cle in courant:
@@ -101,22 +97,53 @@ def resoudre(chemin: str, donnees: dict):
     return courant
 
 
+def fmt(valeur):
+    if valeur is None or valeur == "":
+        return MANQUANT
+    if isinstance(valeur, bool):
+        return "Oui" if valeur else "Non"
+    return str(valeur)
+
+
+def bloc_locataires(locataires: list) -> str:
+    if not locataires:
+        return "_Aucun locataire renseigné._"
+    lignes = []
+    for loc in locataires:
+        nom = " ".join(x for x in [loc.get("civilite"), loc.get("prenoms"), loc.get("nom")] if x) or MANQUANT
+        contact = " · ".join(x for x in [loc.get("email"), loc.get("telephone")] if x) or MANQUANT
+        lignes.append(f"- **{nom}** — {contact}")
+    return "\n".join(lignes)
+
+
+def bloc_locataires_detail(locataires: list) -> str:
+    if not locataires:
+        return "_Aucun locataire renseigné._"
+    entete = "| Civilité | Nom | Prénom(s) | Naissance | Email | Téléphone |\n|---|---|---|---|---|---|"
+    lignes = [entete]
+    for loc in locataires:
+        lignes.append("| {} | {} | {} | {} | {} | {} |".format(
+            fmt(loc.get("civilite")), fmt(loc.get("nom")), fmt(loc.get("prenoms")),
+            fmt(loc.get("date_naissance")), fmt(loc.get("email")), fmt(loc.get("telephone")),
+        ))
+    return "\n".join(lignes)
+
+
 def remplir(template: str, contexte: dict) -> str:
     def remplacer(m):
-        valeur = resoudre(m.group(1).strip(), contexte)
-        if valeur is None or valeur == "":
-            return MANQUANT
-        if isinstance(valeur, bool):
-            return "Oui" if valeur else "Non"
-        return str(valeur)
-
+        cle = m.group(1).strip()
+        if cle == "bloc.locataires":
+            return bloc_locataires(contexte.get("locataires", []))
+        if cle == "bloc.locataires_detail":
+            return bloc_locataires_detail(contexte.get("locataires", []))
+        return fmt(resoudre(cle, contexte))
     return re.sub(r"\{\{([^}]+)\}\}", remplacer, template)
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Remplit les templates locataire/Visale.")
+    p = argparse.ArgumentParser(description="Remplit les documents du dossier.")
     p.add_argument("slug", help="Nom du dossier dans dossiers/ (ex: dupont-marie)")
-    p.add_argument("--bien", help="Ref du bien dans config/logement.yaml")
+    p.add_argument("--bien", help="Ref du bien dans config/logement.yaml (sinon celui de donnees.location.ref)")
     args = p.parse_args()
 
     dossier = RACINE / "dossiers" / args.slug
@@ -127,26 +154,26 @@ def main() -> int:
 
     donnees = json.loads(donnees_path.read_text(encoding="utf-8"))
 
-    # Logement
     conf = charger_yaml(RACINE / "config" / "logement.yaml")
     biens = conf.get("biens", []) if isinstance(conf, dict) else []
+    ref = args.bien or (donnees.get("location") or {}).get("ref")
     bien = {}
     if biens:
-        if args.bien:
-            bien = next((b for b in biens if b.get("ref") == args.bien), {})
-            if not bien:
-                print(f"Attention : bien '{args.bien}' introuvable, aucun bien associe.", file=sys.stderr)
-        else:
-            bien = biens[0]
+        bien = next((b for b in biens if b.get("ref") == ref), {}) if ref else biens[0]
+        if ref and not bien:
+            print(f"Attention : bien '{ref}' introuvable dans logement.yaml.", file=sys.stderr)
+    # loyer_cc calcule si absent
+    if bien and "loyer_cc" not in bien and "loyer_hc" in bien:
+        bien = dict(bien)
+        bien["loyer_cc"] = (bien.get("loyer_hc") or 0) + (bien.get("charges") or 0)
 
     contexte = dict(donnees)
-    contexte["logement"] = bien
+    contexte["location"] = {**(donnees.get("location") or {}), **bien}
 
-    for nom_tpl, sortie in [("fiche_locataire.md", "fiche_locataire.md"),
-                            ("dossier_visale.md", "dossier_visale.md")]:
+    for nom_tpl in ("fiche_locataire.md", "visale_activation.md"):
         tpl = (RACINE / "templates" / nom_tpl).read_text(encoding="utf-8")
-        (dossier / sortie).write_text(remplir(tpl, contexte), encoding="utf-8")
-        print(f"Ecrit : {(dossier / sortie).relative_to(RACINE)}")
+        (dossier / nom_tpl).write_text(remplir(tpl, contexte), encoding="utf-8")
+        print(f"Ecrit : {(dossier / nom_tpl).relative_to(RACINE)}")
 
     return 0
 

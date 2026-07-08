@@ -1,65 +1,45 @@
-# Fiche locataire — {{identite.civilite}} {{identite.prenoms}} {{identite.nom_naissance}}
+# Fiche locataire — {{location.ref}}
 
-> Fiche générée automatiquement à partir de la pièce d'identité et de l'email transféré.
-> Statut : **BROUILLON — À VALIDER**. Les champs marqués `⚠️` sont incertains, à vérifier.
+> Générée automatiquement à partir des pièces reçues. **BROUILLON — À VALIDER.**
+> Champs marqués `⚠️ à compléter` = non lus / absents, à vérifier (jamais inventés).
 
-## Photo de profil
-![Photo de profil]({{photo_profil}})
+## Locataire(s)
+{{bloc.locataires_detail}}
 
-## Identité
+## Logement
 | Champ | Valeur |
 |---|---|
-| Civilité | {{identite.civilite}} |
-| Nom de naissance | {{identite.nom_naissance}} |
-| Nom d'usage | {{identite.nom_usage}} |
-| Prénom(s) | {{identite.prenoms}} |
-| Sexe | {{identite.sexe}} |
-| Date de naissance | {{identite.date_naissance}} |
-| Lieu de naissance | {{identite.lieu_naissance}} |
-| Nationalité | {{identite.nationalite}} |
+| Référence | {{location.ref}} |
+| Adresse | {{location.adresse}} |
+| Type | {{location.type}} |
+| Surface | {{location.surface}} m² |
+| Meublé | {{location.meuble}} |
+| Loyer hors charges | {{location.loyer_hc}} € |
+| Charges | {{location.charges}} € |
+| Loyer charges comprises | {{location.loyer_cc}} € |
+| Dépôt de garantie | {{location.depot_garantie}} € |
+| Date d'entrée | {{location.date_disponibilite}} |
 
-## Pièce d'identité
+## Garantie Visale
 | Champ | Valeur |
 |---|---|
-| Type | {{piece_identite.type}} |
-| Numéro | {{piece_identite.numero}} |
-| Délivrée le | {{piece_identite.date_delivrance}} |
-| Expire le | {{piece_identite.date_expiration}} |
-| Autorité | {{piece_identite.autorite_delivrance}} |
+| Code visa | {{visale.code_visa}} |
+| Validité | {{visale.validite_debut}} → {{visale.validite_fin}} |
+| Statut | {{visale.statut_activation}} |
 
-## Contact
+## Assurance habitation
 | Champ | Valeur |
 |---|---|
-| Email | {{contact.email}} |
-| Téléphone | {{contact.telephone}} |
-| Adresse actuelle | {{contact.adresse_actuelle}} |
+| Assureur | {{assurance_habitation.assureur}} |
+| N° contrat | {{assurance_habitation.numero_contrat}} |
+| Validité | {{assurance_habitation.validite_debut}} → {{assurance_habitation.validite_fin}} |
 
-## Situation professionnelle
+## État des lieux
 | Champ | Valeur |
 |---|---|
-| Statut | {{situation.statut}} |
-| Employeur | {{situation.employeur}} |
-| Type de contrat | {{situation.type_contrat}} |
-| Revenu mensuel net | {{situation.revenu_mensuel_net}} € |
-
-## Garant
-| Champ | Valeur |
-|---|---|
-| Nom complet | {{garant.nom_complet}} |
-| Lien | {{garant.lien}} |
-| Email | {{garant.email}} |
-
-## Logement concerné
-| Champ | Valeur |
-|---|---|
-| Adresse | {{logement.adresse}} |
-| Type | {{logement.type}} |
-| Surface | {{logement.surface}} m² |
-| Meublé | {{logement.meuble}} |
-| Loyer hors charges | {{logement.loyer_hc}} € |
-| Charges | {{logement.charges}} € |
-| Dépôt de garantie | {{logement.depot_garantie}} € |
-| Disponible le | {{logement.date_disponibilite}} |
+| Type | {{etat_des_lieux.type}} |
+| Bien | {{etat_des_lieux.bien}} |
+| Date | {{etat_des_lieux.date}} |
 
 ---
-*Source : {{meta.source_email}} — Confiance globale : {{meta.confiance_globale}}*
+*Source : {{meta.source_email}} — Confiance : {{meta.confiance_globale}}*

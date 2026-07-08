@@ -1,0 +1,30 @@
+# Pieces requises pour qu'un dossier soit "pret a signer".
+# Copiez ce fichier en `config/pieces_requises.yaml` et adaptez a votre pratique.
+# `par_locataire: true`  => une piece par locataire (ex: chaque colocataire sa CNI).
+# `obligatoire: false`   => piece utile mais non bloquante pour la signature.
+
+pieces:
+  - type: piece_identite
+    libelle: "Piece d'identite"
+    par_locataire: true
+    obligatoire: true
+
+  - type: visale
+    libelle: "Garantie Visale (PDF avec code visa)"
+    par_locataire: false
+    obligatoire: true
+
+  - type: attestation_assurance
+    libelle: "Attestation d'assurance habitation"
+    par_locataire: false
+    obligatoire: true
+
+  - type: certificat_scolarite
+    libelle: "Certificat de scolarite"
+    par_locataire: false
+    obligatoire: false   # requis seulement si locataire etudiant
+
+  - type: etat_des_lieux
+    libelle: "Etat des lieux (entree)"
+    par_locataire: false
+    obligatoire: false   # etabli a la remise des cles

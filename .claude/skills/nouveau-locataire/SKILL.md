@@ -1,85 +1,93 @@
 ---
 name: nouveau-locataire
 description: >
-  Traite l'arrivee d'un nouveau locataire a partir d'un email transfere contenant
-  la piece d'identite. Lit la piece d'identite (vision), remplit la fiche locataire,
-  prepare le dossier Visale, definit la photo de profil, puis presente un recapitulatif
-  "A VALIDER" avant toute finalisation. Utiliser quand l'utilisateur transfere un email
-  de nouveau locataire, depose une photo de piece d'identite, ou demande de "traiter un
-  dossier locataire".
+  Traite le dossier d'un nouveau locataire a partir d'un lot de pieces (piece d'identite,
+  PDF de garantie Visale, certificat de scolarite, attestation d'assurance, etat des lieux).
+  Classe et range les pieces, extrait les infos clefs (code Visale, noms, bien), prepare
+  l'activation Visale et la fiche locataire, verifie la completude, puis presente un
+  recapitulatif "A VALIDER" avant toute finalisation. Utiliser quand l'utilisateur transfere
+  un email de locataire, depose des pieces, ou demande de "traiter un dossier locataire".
 ---
 
 # Skill : Nouveau locataire
 
-Objectif : automatiser l'entree d'un nouveau locataire tout en laissant l'humain valider
-avant finalisation. **Rien n'est finalise sans validation explicite de l'utilisateur.**
+Objectif : recevoir un lot de pieces, tout ranger et extraire, preparer l'activation Visale
+et verifier que le dossier est **pret a signer** — en laissant l'humain valider.
+**Rien n'est finalise sans validation explicite de l'utilisateur.**
 
-## Principe de securite des donnees
-- Ne JAMAIS inventer une valeur. Si un champ n'est pas lisible sur la piece ou absent de
-  l'email, laisser `null` et l'ajouter dans `meta.champs_incertains`.
-- Toujours signaler le niveau de confiance et les champs a re-verifier.
+## Regles de securite des donnees
+- Ne JAMAIS inventer une valeur. Champ illisible/absent => `null` + l'ajouter dans
+  `meta.champs_incertains`. Signaler la confiance.
+- Les pieces (identite, etc.) restent dans `dossiers/<slug>/` (git-ignore).
+
+## Types de pieces attendues
+piece d'identite · garantie Visale (PDF) · certificat de scolarite · attestation d'assurance
+habitation · etat des lieux · (RIB, justificatif de revenus, autre).
 
 ## Etapes
 
-### 1. Localiser le dossier
-- Si un `.eml` vient d'etre depose dans `inbox/`, le deballer :
-  ```
-  python3 scripts/preparer_dossier.py inbox/<fichier>.eml
-  ```
-  (option `--nom "Nom Prenom"` pour forcer le nom du dossier)
-- Si l'utilisateur a directement depose des images/PDF, creer `dossiers/<slug>/pieces/`
-  et y placer les fichiers, plus un `meta.json` minimal.
-- Le dossier de travail est `dossiers/<slug>/`.
+### 1. Recevoir le lot
+- Email `.eml` dans `inbox/` -> `python3 scripts/preparer_dossier.py inbox/<fichier>.eml --nom "Nom Prenom"`.
+- Ou pieces deposees directement -> les placer dans `dossiers/<slug>/pieces/`.
 
-### 2. Lire la piece d'identite (vision)
-- Lire chaque image/PDF de `dossiers/<slug>/pieces/` avec l'outil Read.
-- Extraire les champs selon `schemas/locataire.schema.json` :
-  identite (nom de naissance, nom d'usage, prenoms, sexe, date et lieu de naissance,
-  nationalite), piece (type, numero, dates, autorite), et la MRZ si lisible pour recouper.
-- Recouper les dates avec la MRZ quand elle est presente.
-- Lire `dossiers/<slug>/email.txt` pour recuperer **email**, **telephone**, **adresse
-  actuelle**, **situation professionnelle**, et un eventuel **garant** ou **numero Visale**.
+### 2. Classer et lire chaque piece (vision + lecture PDF)
+Pour chaque fichier de `dossiers/<slug>/pieces/`, avec l'outil Read :
+- **Identifier le type** de document.
+- **Extraire les champs utiles** selon le type :
+  - *Piece d'identite* : civilite, nom, prenoms, date de naissance, nationalite ; extraire la
+    photo de portrait pour la photo de profil du locataire.
+  - *Garantie Visale (PDF)* : **numero/code du visa**, beneficiaire, dates de validite.
+  - *Certificat de scolarite* : etablissement, annee, nom de l'etudiant.
+  - *Attestation d'assurance* : assureur, n° de contrat, dates, bien couvert.
+  - *Etat des lieux (PDF)* : type (entree/sortie), **bien**, **noms des locataires**, date.
+- Lire aussi `dossiers/<slug>/email.txt` (email, telephone, situation, bien concerne).
 
-### 3. Definir la photo de profil
-- Reperer la photo d'identite sur la piece.
-- Si une photo de portrait separee est fournie dans les pieces, la preferer.
-- Copier/recadrer l'image retenue vers `dossiers/<slug>/photo_profil.jpg` et renseigner
-  `photo_profil` dans les donnees. (Pour un recadrage precis, utiliser Pillow si dispo ;
-  sinon copier la photo fournie telle quelle et le noter dans `champs_incertains`.)
+### 3. Ecrire donnees.json
+- Ecrire `dossiers/<slug>/donnees.json` conforme a `schemas/dossier.schema.json` :
+  `locataires[]`, `pieces[]` (avec `type`, `fichier_origine`, `locataire`), `visale`,
+  `assurance_habitation`, `etat_des_lieux`, `meta`.
+- Renseigner `location.ref` (le bien loue ; le deviner depuis l'objet de l'email ou demander).
 
-### 4. Ecrire donnees.json
-- Ecrire `dossiers/<slug>/donnees.json` conforme au schema.
-- Renseigner `meta.confiance_globale` (Haute/Moyenne/Faible) et `meta.champs_incertains`.
-- Pour Visale, pre-evaluer `visale.eligible_pressenti` (Oui/Non/A verifier) selon l'age
-  (18-30 ans = eligible quelle que soit la situation) et le plafond de loyer du bien.
+### 4. Ranger les pieces (nomenclature standard)
+```
+python3 scripts/organiser_pieces.py <slug>
+```
+Renomme les fichiers en `type[_locataire].ext` (prets a televerser dans la page "pieces"
+de la location) et met a jour `donnees.json`.
 
-### 5. Remplir les documents
-- Associer le bon bien : demander/deviner la `ref` (`config/logement.yaml`), la passer en
-  `--bien`.
-  ```
-  python3 scripts/remplir_templates.py <slug> --bien <REF>
-  ```
-- Cela genere `fiche_locataire.md` et `dossier_visale.md` dans le dossier.
+### 5. Preparer les documents
+```
+python3 scripts/remplir_templates.py <slug> --bien <REF>
+```
+Genere `fiche_locataire.md` et `visale_activation.md` (code Visale + caracteristiques du
+logement a saisir sur visale.fr pour activer la couverture).
 
-### 6. Presenter "A VALIDER" (checkpoint humain)
-Afficher a l'utilisateur, de facon concise :
-- Un **tableau des champs extraits** avec la source (piece d'identite / email) ;
-- Les **champs incertains ou manquants** en evidence ;
-- Le **verdict d'eligibilite Visale** de principe et ce qui reste a confirmer ;
-- Le chemin de la **photo de profil** retenue ;
-- Les deux documents generes.
+### 6. Verifier la completude
+```
+python3 scripts/verifier_completude.py <slug>
+```
+Genere `recapitulatif.md` : inventaire des pieces, checklist (present/manquant), statut
+Visale et etat des lieux, et le verdict **CONTRAT PRET A SIGNER** ou la liste des manquants.
 
-Puis demander explicitement : **« Je valide ? Corriges-tu un champ avant de finaliser ? »**
+### 7. Presenter "A VALIDER" (checkpoint humain)
+Afficher `recapitulatif.md` a l'utilisateur, en mettant en avant :
+- les pieces rangees et celles qui **manquent** ;
+- le **code Visale** extrait et les caracteristiques a saisir pour l'activation ;
+- pour l'etat des lieux : le **bien** et les **noms** extraits ;
+- les **champs incertains**.
+
+Puis demander explicitement : **« Je valide ? Un champ a corriger avant de finaliser ? »**
 Ne PAS finaliser tant que l'utilisateur n'a pas valide.
 
-### 7. Finaliser (uniquement apres validation)
-- Appliquer les corrections eventuelles dans `donnees.json` et re-remplir les templates.
-- Marquer `meta.statut = "valide"` dans `dossiers/<slug>/meta.json`.
-- Recapituler les actions manuelles restantes cote plateforme de gestion locative :
-  creer la fiche locataire (copier les champs / importer la photo de profil), lancer la
-  demande Visale, preparer le bail.
+### 8. Finaliser (apres validation seulement)
+- Appliquer les corrections dans `donnees.json`, re-lancer les scripts concernes.
+- `meta.statut = "valide"`.
+- Rappeler les actions a faire cote plateforme et visale.fr :
+  1. Televerser les pieces de `pieces/` dans la page "pieces" de la location.
+  2. Sur visale.fr : saisir le code visa + caracteristiques (`visale_activation.md`), **valider**.
+  3. Enregistrer l'etat des lieux dans les pieces.
+  4. Quand tout est complet -> **contrat pret a signer**.
 
 ## Rappels
-- Documents prioritaires : **fiche locataire** + **dossier Visale**.
-- Visale : la demande officielle se fait par le candidat sur visale.fr ; verifier les
-  conditions a jour (voir `docs/visale.md`).
+- Visale : la couverture s'active cote bailleur en saisissant le code du locataire ; voir `docs/visale.md`.
+- Etat des lieux : voir `docs/etat_des_lieux.md`.
