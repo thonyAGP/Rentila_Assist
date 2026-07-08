@@ -69,10 +69,19 @@ Lot de pièces ──► inbox/ ou dossiers/<slug>/pieces/
 | `scripts/remplir_templates.py` | Génère les documents depuis `donnees.json` |
 | `scripts/verifier_completude.py` | Checklist profil + pièces, verdict « prêt à signer » |
 | `scripts/enregistrer.py` | Finalise : met à jour le registre (locataires + contrat) |
+| `scripts/exporter_rentila_csv.py` | Génère un CSV d'import locataires pour Rentila |
+| `scripts/analyser_har.py` | Extrait les appels API d'une capture réseau (HAR) |
 | `config/logement.yaml` · `config/pieces_requises.yaml` | Biens + pièces exigées (depuis `.example`) |
 | `registre/locataires.json` · `registre/contrats.json` | Locataires connus · historique des contrats |
 | `inbox/` · `dossiers/` | Emails à traiter · un sous-dossier par location |
 | `docs/` | Transfert email, Visale, état des lieux, automatisation |
+
+## Saisie sur Rentila / Visale
+Voir `docs/integration.md`. En résumé :
+- **Rentila** : pas d'API REST publique documentée, mais **import CSV** des locataires
+  (`exporter_rentila_csv.py`) ; mention « API & MCP » à vérifier dans votre compte.
+- **Visale** : pas d'API → **capture de vos saisies** (HAR) puis `analyser_har.py` pour
+  reconstituer les appels (`docs/capturer_appels.md`).
 
 ## Notes
 - Champs non lus → `⚠️ à compléter`, jamais inventés ; signalés dans `meta.champs_incertains`.

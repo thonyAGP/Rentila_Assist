@@ -9,6 +9,11 @@
 # Config reelle (garder les exemples versionnes)
 /config/logement.yaml
 /config/pieces_requises.yaml
+/config/rentila_import.yaml
+
+# Captures reseau (HAR) : cookies de session + donnees personnelles
+/captures/
+*.har
 
 # Registre reel (noms de locataires + contrats = donnees personnelles)
 /registre/locataires.json

@@ -1,0 +1,29 @@
+# Correspondance entre les colonnes du modele d'import Rentila et les champs d'un locataire.
+# Copiez en `config/rentila_import.yaml` et AJUSTEZ les noms de colonnes (`colonne`) pour
+# qu'ils correspondent EXACTEMENT a l'en-tete du modele CSV telecharge depuis Rentila.
+#
+# `champ`   : chemin dans l'objet locataire de donnees.json (ex: email, prenoms).
+# `valeur`  : valeur fixe (au lieu de `champ`).
+# `separateur` du CSV : voir `delimiteur` ci-dessous (Rentila peut attendre ; ou ,).
+
+delimiteur: ";"
+
+colonnes:
+  - colonne: "Civilité"          # <-- adapter au libelle exact du modele Rentila
+    champ: "civilite"
+  - colonne: "Nom"
+    champ: "nom"
+  - colonne: "Prénom"
+    champ: "prenoms"
+  - colonne: "Email"
+    champ: "email"
+  - colonne: "Téléphone"
+    champ: "telephone"
+  - colonne: "Date de naissance"
+    champ: "date_naissance"
+  - colonne: "Adresse"
+    champ: "adresse_actuelle"
+  - colonne: "Nationalité"
+    champ: "nationalite"
+  - colonne: "Type de locataire"
+    valeur: "Particulier"
