@@ -1,0 +1,26 @@
+{
+  "_aide": "Selecteurs Rentila pour le pilotage Playwright. Copiez en config/rentila_selectors.json. Les selecteurs/URL exacts se remplissent a partir de la CARTOGRAPHIE (automation/cartographier.mjs) : lancez-la sur chaque page a automatiser, elle liste les champs et leurs selecteurs. Remplacez ensuite les valeurs ci-dessous.",
+  "base_url": "https://www.rentila.com",
+  "auth": "automation/.auth/rentila.json",
+  "biens": {
+    "T2-RIVOLI": { "id": "REMPLACER_PAR_ID_RENTILA" }
+  },
+  "champs": [
+    {
+      "cle": "taxe_fonciere",
+      "libelle": "Taxe fonciere",
+      "url": "/property/{id}/edit",
+      "selecteur": "#taxe_fonciere",
+      "type": "input",
+      "bouton_valider": "button[type=submit]"
+    },
+    {
+      "cle": "charges_eau_annuelle",
+      "libelle": "Charges d'eau (annuelles)",
+      "url": "/property/{id}/charges",
+      "selecteur": "#charge_eau",
+      "type": "input",
+      "bouton_valider": "button[type=submit]"
+    }
+  ]
+}

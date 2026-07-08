@@ -71,6 +71,8 @@ Lot de pièces ──► inbox/ ou dossiers/<slug>/pieces/
 | `scripts/enregistrer.py` | Finalise : met à jour le registre (locataires + contrat) |
 | `scripts/exporter_rentila_csv.py` | Génère un CSV d'import locataires pour Rentila |
 | `scripts/analyser_har.py` | Extrait les appels API d'une capture réseau (HAR) |
+| `scripts/amortissement.py` | Calcule le tableau d'amortissement LMNP d'un bien |
+| `automation/` | Pilotage Playwright de Rentila (connexion, cartographie, config) |
 | `config/logement.yaml` · `config/pieces_requises.yaml` | Biens + pièces exigées (depuis `.example`) |
 | `registre/locataires.json` · `registre/contrats.json` | Locataires connus · historique des contrats |
 | `inbox/` · `dossiers/` | Emails à traiter · un sous-dossier par location |
@@ -82,6 +84,14 @@ Voir `docs/integration.md`. En résumé :
   (`exporter_rentila_csv.py`) ; mention « API & MCP » à vérifier dans votre compte.
 - **Visale** : pas d'API → **capture de vos saisies** (HAR) puis `analyser_har.py` pour
   reconstituer les appels (`docs/capturer_appels.md`).
+
+## Piloter Rentila (Playwright) — configurer les biens à fond
+Voir `docs/automatisation_rentila_playwright.md`. S'exécute **sur votre machine** (où vous
+êtes connecté à Rentila), avec **dry-run + validation avant écriture** :
+1. `node automation/connexion.mjs` — connexion (session réutilisée, aucun mot de passe stocké).
+2. `node automation/cartographier.mjs "<url>"` — capture les champs/sélecteurs d'une page.
+3. `node automation/configurer_bien.mjs <REF>` — remplit taxe foncière, charges d'eau, etc.
+   (dry-run ; `--appliquer` pour écrire). Amortissement via `scripts/amortissement.py`.
 
 ## Notes
 - Champs non lus → `⚠️ à compléter`, jamais inventés ; signalés dans `meta.champs_incertains`.

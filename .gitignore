@@ -10,10 +10,18 @@
 /config/logement.yaml
 /config/pieces_requises.yaml
 /config/rentila_import.yaml
+/config/biens_fiscal.yaml
+/config/biens_fiscal.json
+/config/rentila_selectors.json
 
 # Captures reseau (HAR) : cookies de session + donnees personnelles
 /captures/
 *.har
+
+# Automatisation Playwright : session (cookies) et captures d'ecran = sensibles
+/automation/.auth/
+/automation/captures/
+/automation/node_modules/
 
 # Registre reel (noms de locataires + contrats = donnees personnelles)
 /registre/locataires.json

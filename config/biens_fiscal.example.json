@@ -1,0 +1,28 @@
+{
+  "_aide": "Donnees fiscales par bien. Copiez en config/biens_fiscal.json. Sert au calcul d'amortissement (amortissement.py) et au remplissage Rentila (charges d'eau, taxe fonciere, tableau d'amortissement). Les pct_du_bati doivent totaliser 100.",
+  "biens": [
+    {
+      "ref": "T2-RIVOLI",
+      "date_acquisition": "2023-01-01",
+      "date_mise_en_location": "2023-03-01",
+      "prix_acquisition": 250000,
+      "frais_acquisition": 20000,
+      "quote_part_terrain_pct": 15,
+      "composants": [
+        { "libelle": "Gros oeuvre", "pct_du_bati": 50, "duree": 50 },
+        { "libelle": "Facade / etancheite", "pct_du_bati": 15, "duree": 25 },
+        { "libelle": "Installations techniques", "pct_du_bati": 25, "duree": 20 },
+        { "libelle": "Agencements / finitions", "pct_du_bati": 10, "duree": 15 }
+      ],
+      "mobilier": [
+        { "libelle": "Mobilier (meuble)", "base": 8000, "duree": 7, "date_debut": "2023-03-01" }
+      ],
+      "travaux": [
+        { "libelle": "Renovation cuisine", "base": 6000, "duree": 10, "date_debut": "2024-06-01" }
+      ],
+      "taxe_fonciere": 1100,
+      "charges_eau_annuelle": 300,
+      "teom_recuperable": 95
+    }
+  ]
+}
