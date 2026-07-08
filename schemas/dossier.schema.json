@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Dossier de location",
-  "description": "Dossier d'une location : locataires, pieces recues, code Visale, etat des lieux. Ne jamais inventer une valeur : champ absent/illisible => null + ajouter a meta.champs_incertains.",
+  "description": "Dossier d'une location : locataires (profil complet), pieces recues, code Visale, etat des lieux, contrat propose. Ne jamais inventer une valeur : champ absent/illisible => null + ajouter a meta.champs_incertains.",
   "type": "object",
   "properties": {
     "location": {
@@ -9,40 +9,47 @@
       "description": "Le bien loue (repris de config/logement.yaml).",
       "properties": {
         "ref": { "type": ["string", "null"] },
-        "adresse": { "type": ["string", "null"] }
+        "adresse": { "type": ["string", "null"] },
+        "colocation": { "type": ["boolean", "null"], "description": "true si plusieurs locataires / plusieurs emails attendus" }
       }
     },
     "locataires": {
       "type": "array",
-      "description": "Un ou plusieurs locataires (colocation / couple).",
+      "description": "Un ou plusieurs locataires. PROFIL COMPLET = condition n1 pour creer le dossier de location cote plateforme.",
       "items": {
         "type": "object",
         "properties": {
+          "id": { "type": ["string", "null"], "description": "Identifiant stable (ex: dupont-marie-1998) pour le registre" },
+          "statut_profil": { "type": ["string", "null"], "enum": ["existant", "nouveau", null], "description": "Renseigne par rechercher_locataire.py" },
           "civilite": { "type": ["string", "null"], "enum": ["M.", "Mme", null] },
           "nom": { "type": ["string", "null"] },
+          "nom_naissance": { "type": ["string", "null"] },
           "prenoms": { "type": ["string", "null"] },
+          "sexe": { "type": ["string", "null"], "enum": ["F", "M", null] },
           "date_naissance": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
+          "lieu_naissance": { "type": ["string", "null"] },
           "nationalite": { "type": ["string", "null"] },
           "email": { "type": ["string", "null"] },
           "telephone": { "type": ["string", "null"] },
+          "adresse_actuelle": { "type": ["string", "null"] },
+          "situation": { "type": ["string", "null"], "enum": ["Salarie", "Etudiant", "Fonctionnaire", "Independant", "Retraite", "Demandeur d'emploi", "Autre", null] },
+          "profession": { "type": ["string", "null"] },
           "photo_profil": { "type": ["string", "null"], "description": "Chemin relatif vers la photo issue de la piece d'identite" }
         }
       }
     },
     "pieces": {
       "type": "array",
-      "description": "Inventaire des documents recus et rangees dans pieces/.",
+      "description": "Inventaire des documents recus et ranges dans pieces/.",
       "items": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["piece_identite", "visale", "certificat_scolarite", "attestation_assurance", "etat_des_lieux", "rib", "justificatif_revenus", "autre"]
-          },
-          "fichier": { "type": "string", "description": "Nom de fichier dans pieces/ (apres renommage standard)" },
+          "type": { "type": "string", "enum": ["piece_identite", "visale", "certificat_scolarite", "attestation_assurance", "etat_des_lieux", "rib", "justificatif_revenus", "autre"] },
+          "fichier": { "type": "string" },
           "fichier_origine": { "type": ["string", "null"] },
-          "locataire": { "type": ["string", "null"], "description": "Nom du locataire concerne, si applicable" },
-          "champs": { "type": "object", "description": "Champs extraits propres au type de piece" },
+          "locataire": { "type": ["string", "null"] },
+          "provenance_email": { "type": ["string", "null"], "description": "Quel email a apporte cette piece (colocation multi-emails)" },
+          "champs": { "type": "object" },
           "recu_le": { "type": ["string", "null"] }
         },
         "required": ["type", "fichier"]
@@ -50,12 +57,11 @@
     },
     "visale": {
       "type": "object",
-      "description": "Extrait du PDF de garantie Visale fourni par le locataire.",
       "properties": {
-        "code_visa": { "type": ["string", "null"], "description": "Numero du visa certifie Visale a saisir sur visale.fr" },
+        "code_visa": { "type": ["string", "null"] },
         "beneficiaire": { "type": ["string", "null"] },
-        "validite_debut": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
-        "validite_fin": { "type": ["string", "null"], "description": "AAAA-MM-JJ" },
+        "validite_debut": { "type": ["string", "null"] },
+        "validite_fin": { "type": ["string", "null"] },
         "statut_activation": { "type": ["string", "null"], "enum": ["a_activer", "active", null] }
       }
     },
@@ -73,16 +79,28 @@
       "type": ["object", "null"],
       "properties": {
         "type": { "type": ["string", "null"], "enum": ["entree", "sortie", null] },
-        "bien": { "type": ["string", "null"], "description": "Bien tel qu'ecrit dans le PDF" },
+        "bien": { "type": ["string", "null"] },
         "locataires": { "type": "array", "items": { "type": "string" } },
         "date": { "type": ["string", "null"] },
         "fichier": { "type": ["string", "null"] }
       }
     },
+    "contrat": {
+      "type": "object",
+      "description": "Conditions du bail. Le loyer propose est pre-rempli a partir de l'ancien contrat du bien (proposer_loyer.py).",
+      "properties": {
+        "loyer_hc_propose": { "type": ["number", "null"] },
+        "charges_proposees": { "type": ["number", "null"] },
+        "source_proposition": { "type": ["string", "null"], "description": "Ex: 'ancien contrat 2023-09 revalorise IRL'" },
+        "loyer_hc_retenu": { "type": ["number", "null"], "description": "Valeur validee par le bailleur" },
+        "charges_retenues": { "type": ["number", "null"] },
+        "date_effet": { "type": ["string", "null"] }
+      }
+    },
     "meta": {
       "type": "object",
       "properties": {
-        "source_email": { "type": ["string", "null"] },
+        "source_emails": { "type": "array", "items": { "type": "string" }, "description": "Tous les emails rattaches (colocation)" },
         "confiance_globale": { "type": ["string", "null"], "enum": ["Haute", "Moyenne", "Faible", null] },
         "champs_incertains": { "type": "array", "items": { "type": "string" } },
         "statut": { "type": ["string", "null"], "enum": ["a_traiter", "a_valider", "valide", null] }

@@ -10,14 +10,19 @@ Rien n'est finalisé sans votre validation.
 
 ## Ce que ça fait
 
-1. **Classe et range les pièces** dans `dossiers/<location>/pieces/` avec des noms clairs,
+1. **Remplit le profil de chaque locataire** (identité + contact depuis la pièce d'identité)
+   — priorité n°1 : sans profil complet, pas de dossier de location.
+2. **Classe et range les pièces** dans `dossiers/<location>/pieces/` avec des noms clairs,
    prêts à téléverser dans la page « pièces » de la location.
-2. **Extrait** : noms des locataires (pièce d'identité), **code Visale** + validité (PDF
+3. **Extrait** : noms des locataires (pièce d'identité), **code Visale** + validité (PDF
    Visale), établissement (certificat de scolarité), assureur/contrat (assurance), **bien +
    noms** (état des lieux).
-3. **Prépare l'activation Visale** : code visa + caractéristiques du logement à saisir sur
+4. **Gère la colocation** : plusieurs emails (un par colocataire) rattachés à une même location.
+5. **Détecte les locataires connus** : complète un locataire existant plutôt que le recréer,
+   et **propose le loyer d'après l'ancien contrat** du bien.
+6. **Prépare l'activation Visale** : code visa + caractéristiques du logement à saisir sur
    visale.fr pour activer la couverture.
-4. **Vérifie la complétude** : quelles pièces manquent → verdict **contrat prêt à signer**.
+7. **Vérifie la complétude** : profil + pièces → verdict **contrat prêt à signer**.
 
 ## Démarrage rapide
 
@@ -37,14 +42,16 @@ Rien n'est finalisé sans votre validation.
 
 ```
 Lot de pièces ──► inbox/ ou dossiers/<slug>/pieces/
-      │  preparer_dossier.py (si .eml)
+      │  preparer_dossier.py [--dossier SLUG]  (si .eml ; --dossier = colocation)
       ▼
   Claude : classe + lit chaque pièce → donnees.json
-      │  organiser_pieces.py   (range/renomme les pièces)
-      │  remplir_templates.py  (fiche + activation Visale)
-      │  verifier_completude.py(récap + verdict)
+      │  rechercher_locataire.py (existant→complète / nouveau)
+      │  proposer_loyer.py       (loyer d'après l'ancien contrat)
+      │  organiser_pieces.py     (range/renomme les pièces)
+      │  remplir_templates.py    (fiche + activation Visale)
+      │  verifier_completude.py  (récap + verdict : profil + pièces)
       ▼
-  ⏸️  « À VALIDER »  ── vous validez ──►  finalisation (contrat prêt à signer)
+  ⏸️  « À VALIDER »  ── vous validez ──►  enregistrer.py (registre) → contrat prêt à signer
 ```
 
 ## Arborescence
@@ -53,14 +60,17 @@ Lot de pièces ──► inbox/ ou dossiers/<slug>/pieces/
 |---|---|
 | `.claude/skills/nouveau-locataire/` | Le workflow que Claude exécute |
 | `schemas/dossier.schema.json` | Structure des données du dossier |
-| `templates/fiche_locataire.md` | Fiche récap locataire(s) + logement |
+| `templates/fiche_locataire.md` | Fiche récap locataire(s) + logement + bail |
 | `templates/visale_activation.md` | Aide à l'activation Visale (code + logement) |
-| `scripts/preparer_dossier.py` | Déballe un `.eml` en dossier de travail |
+| `scripts/preparer_dossier.py` | Déballe un `.eml` (option `--dossier` pour colocation) |
+| `scripts/rechercher_locataire.py` | Détecte locataire existant / nouveau (registre) |
+| `scripts/proposer_loyer.py` | Propose le loyer d'après l'ancien contrat du bien |
 | `scripts/organiser_pieces.py` | Range/renomme les pièces (nomenclature standard) |
 | `scripts/remplir_templates.py` | Génère les documents depuis `donnees.json` |
-| `scripts/verifier_completude.py` | Checklist + verdict « prêt à signer » |
-| `config/logement.yaml` | Vos biens loués (à créer depuis l'exemple) |
-| `config/pieces_requises.yaml` | Pièces exigées pour la signature |
+| `scripts/verifier_completude.py` | Checklist profil + pièces, verdict « prêt à signer » |
+| `scripts/enregistrer.py` | Finalise : met à jour le registre (locataires + contrat) |
+| `config/logement.yaml` · `config/pieces_requises.yaml` | Biens + pièces exigées (depuis `.example`) |
+| `registre/locataires.json` · `registre/contrats.json` | Locataires connus · historique des contrats |
 | `inbox/` · `dossiers/` | Emails à traiter · un sous-dossier par location |
 | `docs/` | Transfert email, Visale, état des lieux, automatisation |
 

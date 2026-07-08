@@ -10,6 +10,10 @@
 /config/logement.yaml
 /config/pieces_requises.yaml
 
+# Registre reel (noms de locataires + contrats = donnees personnelles)
+/registre/locataires.json
+/registre/contrats.json
+
 # Python
 __pycache__/
 *.pyc

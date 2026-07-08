@@ -119,12 +119,15 @@ def bloc_locataires(locataires: list) -> str:
 def bloc_locataires_detail(locataires: list) -> str:
     if not locataires:
         return "_Aucun locataire renseigné._"
-    entete = "| Civilité | Nom | Prénom(s) | Naissance | Email | Téléphone |\n|---|---|---|---|---|---|"
+    entete = ("| Profil | Civilité | Nom | Prénom(s) | Naissance | Nationalité | Email | Téléphone | Adresse actuelle |\n"
+              "|---|---|---|---|---|---|---|---|---|")
     lignes = [entete]
     for loc in locataires:
-        lignes.append("| {} | {} | {} | {} | {} | {} |".format(
-            fmt(loc.get("civilite")), fmt(loc.get("nom")), fmt(loc.get("prenoms")),
-            fmt(loc.get("date_naissance")), fmt(loc.get("email")), fmt(loc.get("telephone")),
+        statut = {"existant": "🔁 existant", "nouveau": "🆕 à créer"}.get(loc.get("statut_profil"), "?")
+        lignes.append("| {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(
+            statut, fmt(loc.get("civilite")), fmt(loc.get("nom")), fmt(loc.get("prenoms")),
+            fmt(loc.get("date_naissance")), fmt(loc.get("nationalite")),
+            fmt(loc.get("email")), fmt(loc.get("telephone")), fmt(loc.get("adresse_actuelle")),
         ))
     return "\n".join(lignes)
 

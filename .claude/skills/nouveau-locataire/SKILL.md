@@ -15,6 +15,15 @@ Objectif : recevoir un lot de pieces, tout ranger et extraire, preparer l'activa
 et verifier que le dossier est **pret a signer** — en laissant l'humain valider.
 **Rien n'est finalise sans validation explicite de l'utilisateur.**
 
+## Priorites
+1. **PROFIL LOCATAIRE COMPLET = condition n1.** Sans profil (identite + contact) saisissable,
+   pas de dossier de location. C'est l'objectif prioritaire : remplir le profil de chaque
+   locataire, signaler tout champ manquant.
+2. **Colocation** : une location peut recevoir **plusieurs emails** (un par colocataire).
+   Les rattacher au meme dossier et fusionner les locataires.
+3. **Locataire deja connu** : le completer plutot que le recreer ; **proposer le loyer**
+   d'apres l'ancien contrat du bien.
+
 ## Regles de securite des donnees
 - Ne JAMAIS inventer une valeur. Champ illisible/absent => `null` + l'ajouter dans
   `meta.champs_incertains`. Signaler la confiance.
@@ -26,8 +35,11 @@ habitation · etat des lieux · (RIB, justificatif de revenus, autre).
 
 ## Etapes
 
-### 1. Recevoir le lot
+### 1. Recevoir le lot (gerer la colocation)
 - Email `.eml` dans `inbox/` -> `python3 scripts/preparer_dossier.py inbox/<fichier>.eml --nom "Nom Prenom"`.
+- **Colocation / 2e email pour le meme bien** : rattacher au dossier existant avec
+  `--dossier <slug>` (ex: `--dossier t2-rivoli-coloc`). Nommer le dossier d'apres le bien
+  (pas d'un seul locataire) quand plusieurs emails sont attendus.
 - Ou pieces deposees directement -> les placer dans `dossiers/<slug>/pieces/`.
 
 ### 2. Classer et lire chaque piece (vision + lecture PDF)
@@ -47,6 +59,18 @@ Pour chaque fichier de `dossiers/<slug>/pieces/`, avec l'outil Read :
   `locataires[]`, `pieces[]` (avec `type`, `fichier_origine`, `locataire`), `visale`,
   `assurance_habitation`, `etat_des_lieux`, `meta`.
 - Renseigner `location.ref` (le bien loue ; le deviner depuis l'objet de l'email ou demander).
+- En colocation, **un objet locataire par personne** dans `locataires[]` ; ne pas ecraser
+  un colocataire deja present si tu retraites le dossier.
+
+### 3bis. Locataire existant + loyer propose
+```
+python3 scripts/rechercher_locataire.py --slug <slug>   # existant -> complete ; sinon "nouveau"
+python3 scripts/proposer_loyer.py <REF> --slug <slug>    # loyer d'apres l'ancien contrat du bien
+```
+- `rechercher_locataire.py` annote chaque locataire (`statut_profil` existant/nouveau) et
+  complete les champs connus depuis `registre/locataires.json`.
+- `proposer_loyer.py` ecrit `contrat.loyer_hc_propose` / `charges_proposees` depuis le
+  dernier contrat du bien (revalorisation configurable). Le bailleur validera/ajustera.
 
 ### 4. Ranger les pieces (nomenclature standard)
 ```
@@ -80,13 +104,17 @@ Puis demander explicitement : **« Je valide ? Un champ a corriger avant de fina
 Ne PAS finaliser tant que l'utilisateur n'a pas valide.
 
 ### 8. Finaliser (apres validation seulement)
-- Appliquer les corrections dans `donnees.json`, re-lancer les scripts concernes.
-- `meta.statut = "valide"`.
+- Appliquer les corrections dans `donnees.json` (dont `contrat.loyer_hc_retenu`), re-lancer
+  les scripts concernes.
+- Enregistrer au registre : `python3 scripts/enregistrer.py <slug>`
+  (upsert des locataires + historisation du contrat -> loyer propose la prochaine fois ;
+  passe `meta.statut = "valide"`).
 - Rappeler les actions a faire cote plateforme et visale.fr :
-  1. Televerser les pieces de `pieces/` dans la page "pieces" de la location.
-  2. Sur visale.fr : saisir le code visa + caracteristiques (`visale_activation.md`), **valider**.
-  3. Enregistrer l'etat des lieux dans les pieces.
-  4. Quand tout est complet -> **contrat pret a signer**.
+  1. **Creer / completer le profil de chaque locataire** (identite + contact + photo de profil).
+  2. Televerser les pieces de `pieces/` dans la page "pieces" de la location.
+  3. Sur visale.fr : saisir le code visa + caracteristiques (`visale_activation.md`), **valider**.
+  4. Enregistrer l'etat des lieux dans les pieces.
+  5. Quand tout est complet -> **contrat pret a signer**.
 
 ## Rappels
 - Visale : la couverture s'active cote bailleur en saisissant le code du locataire ; voir `docs/visale.md`.

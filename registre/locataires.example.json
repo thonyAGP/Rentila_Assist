@@ -1,0 +1,12 @@
+[
+  {
+    "id": "martin-lucas-1990",
+    "civilite": "M.",
+    "nom": "Martin",
+    "prenoms": "Lucas",
+    "date_naissance": "1990-03-22",
+    "email": "lucas.martin@example.com",
+    "telephone": "06 98 76 54 32",
+    "locations": ["STUDIO-GARE"]
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "bien": "T2-RIVOLI",
+    "locataire_id": "durand-paul-1985",
+    "loyer_hc": 930,
+    "charges": 75,
+    "date_debut": "2023-09-01",
+    "date_fin": "2026-06-30"
+  },
+  {
+    "bien": "STUDIO-GARE",
+    "locataire_id": "martin-lucas-1990",
+    "loyer_hc": 610,
+    "charges": 50,
+    "date_debut": "2024-01-15",
+    "date_fin": null
+  }
+]

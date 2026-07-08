@@ -14,11 +14,17 @@
 | Type | {{location.type}} |
 | Surface | {{location.surface}} m² |
 | Meublé | {{location.meuble}} |
-| Loyer hors charges | {{location.loyer_hc}} € |
-| Charges | {{location.charges}} € |
-| Loyer charges comprises | {{location.loyer_cc}} € |
 | Dépôt de garantie | {{location.depot_garantie}} € |
 | Date d'entrée | {{location.date_disponibilite}} |
+
+## Conditions du bail (loyer proposé d'après l'ancien contrat)
+| Champ | Valeur |
+|---|---|
+| Loyer HC proposé | {{contrat.loyer_hc_propose}} € |
+| Charges proposées | {{contrat.charges_proposees}} € |
+| Base de la proposition | {{contrat.source_proposition}} |
+| Loyer HC retenu | {{contrat.loyer_hc_retenu}} € |
+| Date d'effet | {{contrat.date_effet}} |
 
 ## Garantie Visale
 | Champ | Valeur |

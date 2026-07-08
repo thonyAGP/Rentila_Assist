@@ -42,8 +42,20 @@ def piece_requises_defaut():
     ]
 
 
+# Profil minimum pour creer un dossier de location cote plateforme (condition n1).
+CHAMPS_PROFIL = {
+    "civilite": "Civilité", "nom": "Nom", "prenoms": "Prénom(s)",
+    "date_naissance": "Date de naissance", "email": "Email", "telephone": "Téléphone",
+}
+
+
 def nom_locataire(loc: dict) -> str:
     return " ".join(x for x in [loc.get("prenoms"), loc.get("nom")] if x) or "(sans nom)"
+
+
+def profil_incomplet(loc: dict) -> list:
+    """Renvoie la liste des champs de profil manquants pour ce locataire."""
+    return [lib for champ, lib in CHAMPS_PROFIL.items() if not loc.get(champ)]
 
 
 def main() -> int:
@@ -66,6 +78,21 @@ def main() -> int:
     locataires = donnees.get("locataires", []) or []
     pieces = donnees.get("pieces", []) or []
     types_presents = [pc.get("type") for pc in pieces]
+
+    # Profil locataire (condition n1 : sans profil complet, pas de dossier de location)
+    lignes_profil = ["| Locataire | Profil | Champs manquants |", "|---|---|---|"]
+    profils_incomplets = []
+    if not locataires:
+        lignes_profil.append("| _aucun locataire_ | ❌ | tout le profil |")
+        profils_incomplets.append("aucun locataire renseigné")
+    for loc in locataires:
+        nom = nom_locataire(loc)
+        manques = profil_incomplet(loc)
+        statut = {"existant": "🔁 existant", "nouveau": "🆕 à créer"}.get(loc.get("statut_profil"), "?")
+        etat = "✅" if not manques else "❌"
+        lignes_profil.append(f"| {nom} ({statut}) | {etat} | {', '.join(manques) or '—'} |")
+        if manques:
+            profils_incomplets.append(f"{nom} : {', '.join(manques)}")
 
     # Etudiant ? -> certificat de scolarite devient bloquant
     est_etudiant = any(
@@ -101,7 +128,7 @@ def main() -> int:
             if oblig and not present:
                 manquantes_obligatoires.append(libelle)
 
-    pret = not manquantes_obligatoires
+    pret = not manquantes_obligatoires and not profils_incomplets
 
     # Inventaire des pieces
     lignes_inv = ["| Type | Fichier | Locataire |", "|---|---|---|"]
@@ -117,19 +144,24 @@ def main() -> int:
     meta = donnees.get("meta") or {}
     incertains = meta.get("champs_incertains") or []
 
-    verdict = (
-        "## ✅ CONTRAT PRÊT À SIGNER\nToutes les pièces obligatoires sont présentes."
-        if pret else
-        "## ⏳ Dossier incomplet\nPièces obligatoires manquantes :\n"
-        + "\n".join(f"- {m}" for m in manquantes_obligatoires)
-    )
+    if pret:
+        verdict = "## ✅ CONTRAT PRÊT À SIGNER\nProfil(s) complet(s) et pièces obligatoires présentes."
+    else:
+        blocs = ["## ⏳ Dossier incomplet"]
+        if profils_incomplets:
+            blocs.append("**Profil locataire incomplet (bloquant — sans profil, pas de dossier de location) :**\n"
+                         + "\n".join(f"- {m}" for m in profils_incomplets))
+        if manquantes_obligatoires:
+            blocs.append("**Pièces obligatoires manquantes :**\n"
+                         + "\n".join(f"- {m}" for m in manquantes_obligatoires))
+        verdict = "\n\n".join(blocs)
 
     recap = f"""# À VALIDER — Dossier {args.slug}
 
 > Récapitulatif automatique. **Rien n'est finalisé sans votre validation.**
 
-## Locataire(s)
-{chr(10).join('- ' + nom_locataire(l) for l in locataires) or '_aucun_'}
+## Profil locataire (condition n°1 — sans profil complet, pas de dossier de location)
+{chr(10).join(lignes_profil)}
 
 ## Pièces rangées dans `pieces/`
 {chr(10).join(lignes_inv)}

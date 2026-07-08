@@ -30,3 +30,12 @@ bailleur:
   nom: "VOTRE NOM"
   email: "thony56.gtr@gmail.com"
   telephone: ""
+
+# Proposition de loyer lors d'une remise en location
+parametres:
+  # Coefficient applique au loyer de l'ancien contrat pour proposer le nouveau loyer.
+  # 1.0 = loyer identique. Ex: 1.035 pour +3,5% (revalorisation IRL indicative).
+  # En zone tendue, le loyer de relocation est en principe plafonne a l'ancien loyer
+  # revalorise IRL : verifiez la reglementation applicable a votre commune.
+  revalorisation_relocation: 1.0
+

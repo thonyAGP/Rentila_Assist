@@ -51,7 +51,19 @@ def extraire_corps(msg) -> str:
     return contenu
 
 
-def preparer(chemin_eml: Path, nom_force: str | None) -> Path:
+def _nom_unique(pieces: Path, nom_sur: str) -> str:
+    """Evite d'ecraser une piece existante (colocation : plusieurs emails)."""
+    cible = pieces / nom_sur
+    if not cible.exists():
+        return nom_sur
+    tige, ext = Path(nom_sur).stem, Path(nom_sur).suffix
+    n = 2
+    while (pieces / f"{tige}_{n}{ext}").exists():
+        n += 1
+    return f"{tige}_{n}{ext}"
+
+
+def preparer(chemin_eml: Path, nom_force: str | None, dossier_cible: str | None) -> Path:
     with chemin_eml.open("rb") as f:
         msg = email.message_from_binary_file(f, policy=email.policy.default)
 
@@ -60,14 +72,14 @@ def preparer(chemin_eml: Path, nom_force: str | None) -> Path:
     date_env = str(msg.get("Date", ""))
     corps = extraire_corps(msg)
 
-    # Nom du dossier : force par l'utilisateur, sinon deduit de l'objet ou de l'expediteur
-    base_nom = nom_force or objet or expediteur or "locataire"
-    slug = slugifier(base_nom)
+    # Cible : dossier existant (--dossier, ex: colocation) sinon deduit du nom/objet/expediteur
+    slug = slugifier(dossier_cible) if dossier_cible else slugifier(nom_force or objet or expediteur or "locataire")
     dossier = DOSSIERS / slug
     pieces = dossier / "pieces"
+    ajout = dossier.exists()
     pieces.mkdir(parents=True, exist_ok=True)
 
-    # Sauvegarde des pieces jointes
+    # Sauvegarde des pieces jointes (sans ecraser en mode ajout)
     jointes = []
     for partie in msg.walk():
         nom_fichier = partie.get_filename()
@@ -76,49 +88,58 @@ def preparer(chemin_eml: Path, nom_force: str | None) -> Path:
         donnees = partie.get_payload(decode=True)
         if donnees is None:
             continue
-        nom_sur = Path(nom_fichier).name  # anti-traversal
-        cible = pieces / nom_sur
-        cible.write_bytes(donnees)
+        nom_sur = _nom_unique(pieces, Path(nom_fichier).name)  # anti-traversal + anti-collision
+        (pieces / nom_sur).write_bytes(donnees)
         jointes.append(nom_sur)
 
-    # Sauvegarde du corps + metadonnees
-    (dossier / "email.txt").write_text(
+    # Corps de l'email : email.txt, puis email_2.txt, email_3.txt... en mode ajout
+    n = 1
+    cible_corps = dossier / "email.txt"
+    while cible_corps.exists():
+        n += 1
+        cible_corps = dossier / f"email_{n}.txt"
+    cible_corps.write_text(
         f"De: {expediteur}\nObjet: {objet}\nDate: {date_env}\n\n{corps}\n",
         encoding="utf-8",
     )
 
-    meta = {
-        "source_email": chemin_eml.name,
-        "expediteur": expediteur,
-        "objet": objet,
-        "date_email": date_env,
-        "pieces_jointes": jointes,
-        "prepare_le": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "statut": "a_traiter",
+    # meta.json : accumule les emails et les pieces (colocation multi-emails)
+    meta_path = dossier / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {
+        "emails": [], "pieces_jointes": [], "statut": "a_traiter"
     }
-    (dossier / "meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    meta.setdefault("emails", [])
+    meta.setdefault("pieces_jointes", [])
+    meta["emails"].append({
+        "source_email": chemin_eml.name, "expediteur": expediteur,
+        "objet": objet, "date_email": date_env, "corps_fichier": cible_corps.name,
+        "pieces": jointes,
+    })
+    meta["pieces_jointes"] += jointes
+    meta["prepare_le"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    return dossier
+    return dossier, jointes, ajout
 
 
 def main() -> int:
     parseur = argparse.ArgumentParser(description="Deballe un email transfere en dossier locataire.")
     parseur.add_argument("eml", type=Path, help="Chemin vers le fichier .eml transfere")
     parseur.add_argument("--nom", help="Force le nom du dossier (ex: 'Dupont Marie')")
+    parseur.add_argument("--dossier", help="Rattacher a un dossier existant (colocation, 2e email). Ex: t2-rivoli-coloc")
     args = parseur.parse_args()
 
     if not args.eml.exists():
         print(f"Erreur : fichier introuvable : {args.eml}", file=sys.stderr)
         return 1
 
-    dossier = preparer(args.eml, args.nom)
-    meta = json.loads((dossier / "meta.json").read_text(encoding="utf-8"))
-    print(f"Dossier prepare : {dossier.relative_to(RACINE)}")
-    print(f"  Pieces jointes ({len(meta['pieces_jointes'])}) : {', '.join(meta['pieces_jointes']) or 'aucune'}")
-    print(f"  Corps de l'email : {dossier.relative_to(RACINE)}/email.txt")
+    dossier, jointes, ajout = preparer(args.eml, args.nom, args.dossier)
+    action = "Email rattache au dossier" if ajout else "Dossier prepare"
+    print(f"{action} : {dossier.relative_to(RACINE)}")
+    print(f"  Pieces jointes de cet email ({len(jointes)}) : {', '.join(jointes) or 'aucune'}")
     print()
+    if ajout:
+        print("Colocation : ce dossier regroupe plusieurs emails.")
     print("Etape suivante : demandez a Claude de traiter ce dossier")
     print(f'  → skill "nouveau-locataire" sur {dossier.name}')
     return 0
