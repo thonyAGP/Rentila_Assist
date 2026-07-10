@@ -30,8 +30,9 @@ C'est une lecture seule — parfait pour valider la connexion sans rien modifier
 
 ## B. API directe — pour scripts / cron
 
-1. Générez `client_id` + `client_secret` depuis **votre profil Rentila** (le secret n'est
-   affiché **qu'une seule fois**).
+1. Générez `client_id` + `client_secret` depuis **votre profil Rentila** :
+   **Profil → `/profile/#apiclient` → « Client API »** (création en un clic ; le secret n'est
+   affiché **qu'une seule fois** — copiez-le immédiatement).
 2. Renseignez-les en variables d'environnement (jamais dans le code) :
    ```
    cp .env.example .env      # puis remplissez RENTILA_CLIENT_ID / RENTILA_CLIENT_SECRET
@@ -60,6 +61,26 @@ C'est une lecture seule — parfait pour valider la connexion sans rien modifier
   `/landlord/tenants/balances`…
 - La doc interactive complète (`/docs`, `/openapi.json`) n'est consultable que depuis une
   session Rentila connectée dans le navigateur — pas avec le jeton machine.
+
+### Tester dans Swagger UI (doc interactive `/docs`)
+Deux méthodes d'autorisation (bouton **Autoriser**) :
+- **OAuth2ClientCredentials** (recommandé) : collez `client_id` + `client_secret` — Swagger
+  appelle `/oauth/token` lui-même et renouvelle le jeton automatiquement.
+- **OAuth2Bearer** (repli) : collez un JWT déjà obtenu (préfixe `Bearer` ajouté par Swagger).
+  Inutile si vous avez les identifiants ; le jeton expire au bout d'une heure. Pour en
+  générer un à la main sans le faire transiter par un chat ou un fichier :
+  ```
+  curl -s -X POST https://api2.rentila.com/oauth/token \
+    -d "grant_type=client_credentials" \
+    -d "client_id=$RENTILA_CLIENT_ID" \
+    -d "client_secret=$RENTILA_CLIENT_SECRET"
+  ```
+  → champ `access_token` de la réponse.
+
+### Gestion des clients API (endpoints OAuth)
+- `GET /oauth/clients` — lister vos clients API ; `POST /oauth/clients` — en créer un ;
+  `DELETE /oauth/clients/{client_db_id}` — révoquer un client (à faire si un secret fuite).
+- `POST /oauth/revoke` — révoquer un jeton en cours.
 
 ## Sécurité
 - Le **secret** vit uniquement dans `.env` (git-ignoré) et l'environnement — jamais en dur.
