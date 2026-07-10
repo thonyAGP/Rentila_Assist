@@ -42,6 +42,13 @@ Cas à gérer :
 - `scripts/verifier_completude.py <slug>` — récap « À VALIDER » + verdict prêt à signer.
 - `scripts/enregistrer.py <slug>` — finalise : met à jour le registre (locataires + contrat).
 
+## Connexion Rentila (officielle)
+- **MCP** (recommandé) : connecteur `Rentila` → `https://api2.rentila.com/mcp` (OAuth navigateur ;
+  `.mcp.json` le déclare). Une fois connecté, outils `mcp__Rentila__*` ; commencer en lecture.
+- **API** (scripts/cron) : `scripts/rentila_api.py` (OAuth2 client_credentials, secret via
+  `RENTILA_CLIENT_ID`/`RENTILA_CLIENT_SECRET`). Voir `docs/connexion_rentila_mcp_api.md`.
+- Vérifier `token_field` et les chemins d'endpoints contre la doc avant de s'y fier.
+
 ## Config & registre
 - `config/logement.yaml` — biens loués + bailleur + coefficient de revalorisation (copié depuis `.example`).
 - `config/pieces_requises.yaml` — pièces exigées pour la signature.

@@ -72,6 +72,7 @@ Lot de pièces ──► inbox/ ou dossiers/<slug>/pieces/
 | `scripts/exporter_rentila_csv.py` | Génère un CSV d'import locataires pour Rentila |
 | `scripts/analyser_har.py` | Extrait les appels API d'une capture réseau (HAR) |
 | `scripts/amortissement.py` | Calcule le tableau d'amortissement LMNP d'un bien |
+| `scripts/rentila_api.py` | Client API Rentila (OAuth2) pour scripts/cron |
 | `automation/` | Pilotage Playwright de Rentila (connexion, cartographie, config) |
 | `config/logement.yaml` · `config/pieces_requises.yaml` | Biens + pièces exigées (depuis `.example`) |
 | `registre/locataires.json` · `registre/contrats.json` | Locataires connus · historique des contrats |
@@ -84,6 +85,17 @@ Voir `docs/integration.md`. En résumé :
   (`exporter_rentila_csv.py`) ; mention « API & MCP » à vérifier dans votre compte.
 - **Visale** : pas d'API → **capture de vos saisies** (HAR) puis `analyser_har.py` pour
   reconstituer les appels (`docs/capturer_appels.md`).
+
+## Connexion officielle à Rentila (MCP + API)
+Rentila expose un **serveur MCP** (`https://api2.rentila.com/mcp`) et une **API OAuth2**
+(`https://api2.rentila.com`). Voir `docs/connexion_rentila_mcp_api.md`.
+- **MCP** (recommandé, usage agent) : ajoutez le connecteur `Rentila` dans votre client Claude
+  et authentifiez-vous dans le navigateur ; `.mcp.json` le déclare déjà pour Claude Code.
+- **API** (scripts/cron) : `client_id`/`client_secret` en variables d'env (`.env`), puis
+  `python3 scripts/rentila_api.py token` pour confirmer le jeton, `... biens` pour lister.
+
+Cette voie officielle **remplace avantageusement** le pilotage Playwright ci-dessous, à
+réserver aux réglages non exposés par l'API.
 
 ## Piloter Rentila (Playwright) — configurer les biens à fond
 Voir `docs/automatisation_rentila_playwright.md`. S'exécute **sur votre machine** (où vous

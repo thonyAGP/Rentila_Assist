@@ -13,6 +13,10 @@
 /config/biens_fiscal.yaml
 /config/biens_fiscal.json
 /config/rentila_selectors.json
+/config/rentila_api.json
+
+# Secrets (identifiants API Rentila)
+.env
 
 # Captures reseau (HAR) : cookies de session + donnees personnelles
 /captures/

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "Rentila": {
+      "type": "http",
+      "url": "https://api2.rentila.com/mcp"
+    }
+  }
+}
