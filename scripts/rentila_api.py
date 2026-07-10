@@ -4,17 +4,17 @@
 Le secret n'est JAMAIS code en dur : il est lu depuis les variables d'environnement
 RENTILA_CLIENT_ID et RENTILA_CLIENT_SECRET.
 
-⚠️ A VERIFIER contre la documentation Rentila avant de s'y fier (config/rentila_api.json) :
-   - le chemin du token (`token_path`, par defaut /oauth/token) ;
-   - le NOM DU CHAMP du token dans la reponse (`token_field`, par defaut access_token) ;
-   - les chemins des endpoints (biens, locataires, locations).
+Chemins verifies contre la doc officielle (https://api2.rentila.com/docs, OAS 3.1) :
+   - token : POST /oauth/token, champ `access_token` (Bearer, 3600 s) ;
+   - tous les endpoints metier sont prefixes /landlord/ (ex. /landlord/properties,
+     /landlord/tenants, /landlord/leases, /landlord/payments, /landlord/profile).
 La sous-commande `token` affiche les champs reellement renvoyes pour lever le doute.
 
 Usage :
     export RENTILA_CLIENT_ID=...   RENTILA_CLIENT_SECRET=...
-    python3 scripts/rentila_api.py token            # recupere un jeton et montre la reponse
-    python3 scripts/rentila_api.py get /properties  # GET authentifie sur un chemin arbitraire
-    python3 scripts/rentila_api.py biens            # GET sur l'endpoint 'biens' de la config
+    python3 scripts/rentila_api.py token                     # recupere un jeton et montre la reponse
+    python3 scripts/rentila_api.py get /landlord/properties  # GET authentifie sur un chemin arbitraire
+    python3 scripts/rentila_api.py biens                     # GET sur l'endpoint 'biens' de la config
 """
 import argparse
 import base64
@@ -31,9 +31,10 @@ CONFIG = RACINE / "config" / "rentila_api.json"
 DEFAUT = {
     "base_url": "https://api2.rentila.com",
     "token_path": "/oauth/token",
-    "token_field": "access_token",   # A VERIFIER dans la doc
+    "token_field": "access_token",
     "auth_mode": "body",             # 'body' (client_id/secret dans le corps) ou 'basic' (en-tete)
-    "endpoints": {"biens": "/properties", "locataires": "/tenants", "locations": "/rentals"},
+    "endpoints": {"biens": "/landlord/properties", "locataires": "/landlord/tenants",
+                  "locations": "/landlord/leases"},
 }
 
 

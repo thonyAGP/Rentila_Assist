@@ -1,17 +1,20 @@
 {
-  "_aide": "Config du client API Rentila. Copiez en config/rentila_api.json. Les valeurs marquees 'A VERIFIER' doivent etre confirmees contre la doc Rentila au 1er appel (python3 scripts/rentila_api.py token affiche les champs reellement renvoyes). Le secret n'est PAS ici : il vient des variables d'env RENTILA_CLIENT_ID / RENTILA_CLIENT_SECRET.",
+  "_aide": "Config du client API Rentila. Copiez en config/rentila_api.json. Chemins verifies contre la doc officielle (https://api2.rentila.com/docs, OAS 3.1) : tous les endpoints metier sont prefixes /landlord/. Le secret n'est PAS ici : il vient des variables d'env RENTILA_CLIENT_ID / RENTILA_CLIENT_SECRET.",
   "base_url": "https://api2.rentila.com",
   "token_path": "/oauth/token",
   "token_field": "access_token",
   "auth_mode": "body",
   "endpoints": {
-    "biens": "/properties",
-    "locataires": "/tenants",
-    "locations": "/rentals"
+    "biens": "/landlord/properties",
+    "locataires": "/landlord/tenants",
+    "locations": "/landlord/leases"
   },
-  "_a_verifier": [
-    "token_field : nom exact du champ du jeton dans la reponse (souvent access_token)",
-    "endpoints : chemins exacts des ressources (biens/locataires/locations) selon la doc",
-    "auth_mode : 'body' (client_id/secret dans le corps) ou 'basic' (en-tete Authorization)"
-  ]
+  "_autres_endpoints_utiles": {
+    "paiements": "/landlord/payments",
+    "documents": "/landlord/documents",
+    "candidats": "/landlord/candidates",
+    "profil": "/landlord/profile",
+    "alertes": "/landlord/alerts",
+    "soldes_locataires": "/landlord/tenants/balances"
+  }
 }

@@ -47,14 +47,19 @@ C'est une lecture seule — parfait pour valider la connexion sans rien modifier
    `token_field` dans `config/rentila_api.json`.
 4. Interrogez un endpoint (lecture seule d'abord) :
    ```
-   python3 scripts/rentila_api.py get /properties      # chemin arbitraire
-   python3 scripts/rentila_api.py biens                 # endpoint 'biens' de la config
+   python3 scripts/rentila_api.py get /landlord/properties   # chemin arbitraire
+   python3 scripts/rentila_api.py biens                       # endpoint 'biens' de la config
    ```
 
-### À vérifier contre la doc avant de s'y fier
-- `token_path` (défaut `/oauth/token`) et `token_field` (défaut `access_token`).
-- Les **chemins exacts** des endpoints (`endpoints` dans `config/rentila_api.json`).
-- `auth_mode` : `body` (client_id/secret dans le corps) ou `basic` (en-tête Authorization).
+### Chemins vérifiés (doc officielle, testés le 2026-07-10)
+- Jeton : `POST /oauth/token` (client_credentials, `auth_mode: body`) → réponse
+  `{access_token, token_type: Bearer, expires_in: 3600}` — `token_field` = `access_token`.
+- **Tous les endpoints métier sont préfixés `/landlord/`** : `/landlord/properties`,
+  `/landlord/tenants`, `/landlord/leases`, `/landlord/payments`, `/landlord/documents`,
+  `/landlord/candidates`, `/landlord/profile`, `/landlord/alerts`,
+  `/landlord/tenants/balances`…
+- La doc interactive complète (`/docs`, `/openapi.json`) n'est consultable que depuis une
+  session Rentila connectée dans le navigateur — pas avec le jeton machine.
 
 ## Sécurité
 - Le **secret** vit uniquement dans `.env` (git-ignoré) et l'environnement — jamais en dur.
