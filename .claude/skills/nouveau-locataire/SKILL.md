@@ -24,6 +24,16 @@ et verifier que le dossier est **pret a signer** — en laissant l'humain valide
 3. **Locataire deja connu** : le completer plutot que le recreer ; **proposer le loyer**
    d'apres l'ancien contrat du bien.
 
+## Rentila connecte (MCP) = source de verite et cible de finalisation
+Si les outils `mcp__Rentila__*` sont disponibles, les utiliser en PRIORITE (voir
+`docs/workflow_rentila_mcp.md`) :
+- Bien : `query_properties` ; Locataire existant : `query_tenants` ; Loyer ancien :
+  `query_leases(property_id=…)`.
+- Finalisation (APRES validation) : `create_tenant`/`update_tenant`, `create_document`
+  (pieces), `create_handover` (etat des lieux), `create_lease`+`activate_lease`.
+- **Lecture d'abord, ecriture seulement apres le « A VALIDER ».** Verifier l'existence avant
+  de creer (ne pas dupliquer). Les scripts locaux + registre servent de repli hors-ligne.
+
 ## Regles de securite des donnees
 - Ne JAMAIS inventer une valeur. Champ illisible/absent => `null` + l'ajouter dans
   `meta.champs_incertains`. Signaler la confiance.
@@ -104,17 +114,20 @@ Puis demander explicitement : **« Je valide ? Un champ a corriger avant de fina
 Ne PAS finaliser tant que l'utilisateur n'a pas valide.
 
 ### 8. Finaliser (apres validation seulement)
-- Appliquer les corrections dans `donnees.json` (dont `contrat.loyer_hc_retenu`), re-lancer
-  les scripts concernes.
-- Enregistrer au registre : `python3 scripts/enregistrer.py <slug>`
-  (upsert des locataires + historisation du contrat -> loyer propose la prochaine fois ;
-  passe `meta.statut = "valide"`).
-- Rappeler les actions a faire cote plateforme et visale.fr :
-  1. **Creer / completer le profil de chaque locataire** (identite + contact + photo de profil).
-  2. Televerser les pieces de `pieces/` dans la page "pieces" de la location.
-  3. Sur visale.fr : saisir le code visa + caracteristiques (`visale_activation.md`), **valider**.
-  4. Enregistrer l'etat des lieux dans les pieces.
-  5. Quand tout est complet -> **contrat pret a signer**.
+- Appliquer les corrections dans `donnees.json` (dont `contrat.loyer_hc_retenu`).
+
+**Si Rentila MCP connecte** (voie principale) — apres le « A VALIDER » :
+  1. `create_tenant` (ou `update_tenant` si existant) pour chaque locataire.
+  2. `create_document` pour ranger chaque piece de `pieces/` (rattachee au bien/bail/locataire).
+  3. `create_handover` pour l'etat des lieux (type entree/sortie, bien, locataires).
+  4. `create_lease` puis `activate_lease` avec le loyer retenu ; option `start_signing_procedure`.
+  5. Confirmer chaque ecriture ; verifier l'existence avant creation (anti-doublon).
+
+**Hors-ligne (repli)** : `python3 scripts/enregistrer.py <slug>` (registre local + statut).
+
+Puis rappeler ce qui reste hors Rentila :
+  - **Visale** : sur visale.fr, saisir le code visa + caracteristiques (`visale_activation.md`), **valider**.
+  - Quand tout est complet -> **contrat pret a signer**.
 
 ## Rappels
 - Visale : la couverture s'active cote bailleur en saisissant le code du locataire ; voir `docs/visale.md`.

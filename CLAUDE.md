@@ -45,6 +45,9 @@ Cas à gérer :
 ## Connexion Rentila (officielle)
 - **MCP** (recommandé) : connecteur `Rentila` → `https://api2.rentila.com/mcp` (OAuth navigateur ;
   `.mcp.json` le déclare). Une fois connecté, outils `mcp__Rentila__*` ; commencer en lecture.
+  **Quand connecté, le MCP fait autorité** (registre + finalisation) : voir
+  `docs/workflow_rentila_mcp.md`. Lecture d'abord, écriture (`create_*`/`update_*`) seulement
+  après le « À VALIDER ». Vérifier l'existence avant de créer (anti-doublon).
 - **API** (scripts/cron) : `scripts/rentila_api.py` (OAuth2 client_credentials, secret via
   `RENTILA_CLIENT_ID`/`RENTILA_CLIENT_SECRET`). Voir `docs/connexion_rentila_mcp_api.md`.
 - Vérifier `token_field` et les chemins d'endpoints contre la doc avant de s'y fier.
